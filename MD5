@@ -1,0 +1,15 @@
+ca53678355b2706490d1ad04d6c77058 *DESCRIPTION
+c0a154b7907c714dfb8a6618d37bf6ce *NAMESPACE
+5810555675a1f25b1e9a29f1bb7add4a *R/cleanIAT.R
+4b41d522d9e98ac0bb3bdef94ba65855 *R/cleanIATExample.R
+983b03d36c58aed4bb2049734500dd66 *R/plotIIV.R
+9473c8a7e95a441474d3e554f9b69055 *R/plotIndVar.R
+0ba0d0974c86b2c8962dfc9f8fc385a0 *R/plotItemErr.R
+7557addd8a8e51c2b81458107fc1b64e *R/plotItemVar.R
+3bbdaaa36d6215aca557a144d3556362 *data/IATData.RData
+316d8b6e0a9def5325e5b3edb8df868c *man/IATData.Rd
+e2c67b61236a90377491e7d6bdfcc6c4 *man/cleanIAT.Rd
+a1ce3aa8bc207d053e19a7a72d5d1fa0 *man/plotIIV.Rd
+c76ac0f229c1da871639538fee031485 *man/plotIndVar.Rd
+ae2d90821fcebe50821a573c441bc4e3 *man/plotItemErr.Rd
+ff357709efd11a5d7f369d7a9da0ac1d *man/plotItemVar.Rd
