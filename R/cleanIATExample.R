@@ -1,30 +1,28 @@
 data("IATData", envir = .BaseNamespaceEnv)
 
-# Get Ps who recieve Math-Male 
-# sorting task in first blocks
+# Get Ps who recieve Math-Male sorting task in first blocks
+
 myDataCongFirst <- IATData[IATData$isCongruentFirst == 1, ]
 
 myDScoreCongFirst <- cleanIAT(myData = myDataCongFirst,
                               blockName = "BLOCK_NAME_S",
-                              trialBlocks = paste0("BLOCK", c(2, 3, 5, 6)),
+                              trialBlocks = c("BLOCK2", "BLOCK3", "BLOCK5", "BLOCK6"),
                               sessionID = "SESSION_ID",
                               trialLatency = "TRIAL_LATENCY",
                               trialError = "TRIAL_ERROR",
                               vError = 1, vExtreme = 2, vStd = 1)
 
-# Get Ps who recieve Math-Female 
-# sorting task in first blocks
-#myDataCongSec <- IATData[IATData$isCongruentFirst == 0, ]
+# Get Ps who recieve Math-Female sorting task in first blocks
 
-#myDScoreCongSec <- cleanIAT(myData = myDataCongSec,
- #                           blockName = "BLOCK_NAME_S",
-  #                          trialBlocks = paste0("BLOCK", c(2, 3, 5, 6)),
-   #                         sessionID = "SESSION_ID",
-    #                        trialLatency = "TRIAL_LATENCY",
-     #                       trialError = "TRIAL_ERROR",
-      #                      vError = 1, vExtreme = 2, vStd = 1)
+myDataCongSec <- IATData[IATData$isCongruentFirst == 0, ]
 
-#myDScore <- rbind(myDScoreCongFirst, myDScoreCongSec)
+myDScoreCongSec <- cleanIAT(myData = myDataCongSec,
+                            blockName = "BLOCK_NAME_S",
+                            trialBlocks = c("BLOCK2", "BLOCK3", "BLOCK5", "BLOCK6"),
+                            sessionID = "SESSION_ID",
+                            trialLatency = "TRIAL_LATENCY",
+                            trialError = "TRIAL_ERROR",
+                            vError = 1, vExtreme = 2, vStd = 1)
 
-# Print D-Scores for all Ps
-#myDScore$IAT
+myDScore <- rbind(myDScoreCongFirst, myDScoreCongSec)
+
