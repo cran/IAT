@@ -1,38 +1,29 @@
 #' Plot proportion of errors per item in the IAT
 #' 
-#' This function uses ggplot2 to plot proportion of errors in the IAT to see if any items yield high error rates. The data is automatically cleaned
-#' (i.e., trials with RT > 10000 or < 180 are deleted) to avoid over/underinflation of mean estimates and only include trials from
-#' essential blocks.
+#' Plot proportion of errors in the IAT to see if any items yield high error rates. The data is automatically cleaned
+#' (i.e., trials with RT > 10000 or < 180 are deleted) to avoid over/underinflation of mean error estimates
 #' 
-#' @param myData The raw dataframe to be used
-#' @param blockName A string of the variable name for the blocks
-#' @param trialBlocks A vector of the four essential blocks in the seven-block IAT (i.e., B3, B4, B6, and B7).
-#' @param sessionID A string of the variable name identifying each unique participant.
-#' @param itemName A string of the variable identifying the items
-#' @param trialLatency A string of the variable name for the latency of each trial.
-#' @param trialError A string of the variable name identifying whether a trial was an error or not (1 = error)
-#' @import ggplot2 data.table
+#' @param my_data The raw dataframe to be used
+#' @param item_name A string of the variable identifying the items
+#' @param trial_latency A string of the variable name for the latency of each trial.
+#' @param trial_error A string of the variable name identifying whether a trial was an error or not (1 = error)
+#' @import ggplot2 dplyr lazyeval
 #' @export
 
-plotItemErr <- function(myData, blockName, trialBlocks, sessionID, itemName, trialLatency, trialError){
+plotItemErr <- function(my_data, item_name, trial_latency, trial_error){
   
-  # to appease global variable check
-  Item <- NULL; propErrors <- NULL
+  by_item_error <- my_data %>%
+    group_by_(item_name) %>%
+    filter_(interp(~ x > 180 & x < 10000, x = as.name(trial_latency))) %>%
+    summarise_(prop_errors = interp(~ sum(y == 1)/length(y), y = as.name(trial_error))) %>%
+    mutate_(item_name = interp(~ factor(z, levels = z[order(prop_errors)]),
+                               z = as.name(item_name)))
   
-  myDataTable <- data.table(myData)
-  
-  byItemErr <- myDataTable[get(trialLatency) > 180 & get(trialLatency) < 10000,
-                           list(propErrors = sum(get(trialError) == 1)/length(get(trialError))),
-                           by = list(Item = get(itemName))]
-  
-  byItemErr <- as.data.frame(byItemErr)
-  
-  byItemErr$Item <- factor(byItemErr$Item, levels = byItemErr[order(byItemErr$propErrors),]$Item)
-  
-  myMean <- mean(byItemErr$propErrors)
-  
-  p <- ggplot(byItemErr, aes(x = Item, y = propErrors)) + geom_bar(fill = "dark gray", stat = "identity") + geom_hline(aes(yintercept = mean(propErrors)), size = 1.5)
-  p <- p + coord_flip() + theme_bw() 
-  suppressMessages(suppressWarnings(print(p)))
-  
+  ggplot(by_item_error, aes_string(x = "item_name", y = "prop_errors")) + 
+    geom_bar(fill = "dark gray", stat = "identity") +
+    geom_hline(aes(yintercept = mean(by_item_error$prop_errors)), size = 1.5) +
+    labs(x = "Item\n", y = "\nProportion Errors") + 
+    coord_flip() + 
+    theme_bw()
+    
 }

@@ -1,46 +1,48 @@
 #' Plot individual variability in the IAT
 #' 
-#' This function uses ggplot2 to plot mean participant reaction time with 95\% confidence intervals to see how reaction time varies by participant. The data is automatically cleaned
-#' (i.e., no error trials, trials with RT > 10000 or < 180 are deleted) to avoid over/underinflation of mean estimates and only include trials from
+#' Plot mean participant reaction time with 95\% confidence intervals to see how reaction time varies by participant. The data is automatically cleaned
+#' (i.e., no error trials, trials with RT > 10000 or < 180 are deleted) to avoid over/underinflation of mean estimates and only includes trials from
 #' essential blocks.
 #' 
-#' @param myData The raw dataframe to be used
-#' @param blockName A string of the variable name for the blocks
-#' @param trialBlocks A vector of the four essential blocks in the seven-block IAT (i.e., B3, B4, B6, and B7).
-#' @param sessionID A string of the variable name identifying each unique participant.
-#' @param trialLatency A string of the variable name for the latency of each trial.
-#' @param trialError A string of the variable name identifying whether a trial was an error or not (1 = error)
-#' @import ggplot2 data.table
+#' @param my_data The raw dataframe to be used
+#' @param session_id A string of the variable name identifying each unique participant.
+#' @param block_name A string of the variable name for the blocks
+#' @param trial_blocks A vector of the four essential blocks in the seven-block IAT (i.e., B3, B4, B6, and B7).
+#' @param trial_latency A string of the variable name for the latency of each trial.
+#' @param trial_error A string of the variable name identifying whether a trial was an error or not (1 = error)
+#' @import ggplot2 dplyr
+#' @importFrom stats reshape sd
 #' @export
 
-plotIndVar <- function(myData, blockName, trialBlocks, sessionID, trialLatency, trialError){
+plotIndVar <- function(my_data, block_name, trial_blocks, session_id, trial_latency, trial_error){
   
-  # To appease global variable check
-  ID <- NULL; meanRT <- NULL; mySE <- NULL
-  
-  if(length(unique(myData[, sessionID])) > 100){
+  if(length(unique(my_data[, session_id])) > 100){
     
-    sampleIDs <- sample(unique(myData[, sessionID]), 100)
-    myData <- myData[myData[, sessionID] %in% sampleIDs, ]
+    sample_ids <- sample(unique(my_data[, session_id]), 100)
+    
+    my_data <- my_data %>%
+      filter_(interp(~ x %in% sample_ids, x = as.name(session_id)))
+    
     warning("Your total sample size is > 100. A random subsample was taken for plotting.")
     
   }
   
-  myDataTable <- data.table(myData)
+  by_part <- my_data %>%
+    group_by_(session_id) %>%
+    filter_(interp(~ x > 180 & x < 10000, x = as.name(trial_latency)),
+            interp(~ y == 0, y = as.name(trial_error)),
+            interp(~ z %in% trial_blocks, z = as.name(block_name))) %>%
+    summarise_(mean_rt = interp(~ mean(x), x = as.name(trial_latency)),
+               rt_se = interp(~ sd(x)/length(x), x = as.name(trial_latency))) %>%
+    mutate_(session_id = interp(~ factor(a, levels = a[order(mean_rt)]),
+                                a = as.name(session_id)))
   
-  byPart <- myDataTable[get(trialLatency) > 180 & get(trialLatency) < 10000 & get(trialError) == 0 & get(blockName) %in% trialBlocks,
-                        list(N = length(get(trialLatency)),
-                             meanRT = mean(get(trialLatency)),
-                             mySD = sd(get(trialLatency)),
-                             mySE = sd(get(trialLatency))/sqrt(length(get(trialLatency)))),
-                        by = list(ID = get(sessionID))]
-  
-  byPart <- as.data.frame(byPart)
-  
-  byPart$ID <- factor(byPart$ID, levels = byPart[order(byPart$meanRT),]$ID)
-  
-  p <- ggplot(byPart, aes(x = ID, y = meanRT)) + geom_errorbar(aes(ymin = meanRT - 2*mySE, ymax = meanRT + 2*mySE), width = 0)
-  p <- p + geom_line() + geom_point() + coord_flip() + theme_bw()
-  suppressMessages(print(p))
+  ggplot(by_part, aes_string(x = "session_id", y = "mean_rt")) + 
+    geom_errorbar(aes(ymin =  by_part$mean_rt - 2 * by_part$rt_se,
+                      ymax = by_part$mean_rt + 2 * by_part$rt_se), width = 0) +
+    geom_point() +
+    labs(x = "Session ID\n", y = "\nMean Reaction Time") + 
+    coord_flip() + 
+    theme_bw()
   
 }
